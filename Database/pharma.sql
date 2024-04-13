@@ -26,53 +26,67 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `showAllEmp` ()  NO SQL
-select `empID` as ID, `UserName`, `empName` as Name, `empRole` as Role, `empContactNo.` as Contact_Number, `empCNIC` as CNIC,
-`empSex` as Gender, `empBirthDate` as Birth_Date, `empSalary` as Salary
-FROM `emploee`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllEmployees`()
+BEGIN
+    SELECT 
+        `empID` AS ID,
+        `UserName`,
+        `empName` AS Name,
+        `empRole` AS Role,
+        `empContactNo` AS Contact_Number,
+        `empCNIC` AS CNIC,
+        `empSex` AS Gender,
+        `empBirthDate` AS Birth_Date,
+        `empSalary` AS Salary
+    FROM 
+        `employee`;
+END$$
 
 DELIMITER ;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `attendence`
+-- Table structure for table `attendance`
 --
 
-CREATE TABLE `attendence` (
-  `emploeeID` int(11) NOT NULL,
-  `status` enum('Absent','Present','Leave') NOT NULL,
-  `attendDate` date NOT NULL,
-  `timeIN` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `timeOut` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'
+CREATE TABLE `attendance` (
+  `employeeID` INT(11) NOT NULL,
+  `status` ENUM('Absent','Present','Leave') NOT NULL,
+  `attendDate` DATE NOT NULL,
+  `timeIN` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `timeOut` TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `emploee`
+-- Table structure for table `employee`
 --
 
-CREATE TABLE `emploee` (
-  `empID` int(11) NOT NULL,
-  `UserName` varchar(20) NOT NULL,
-  `password` varchar(20) NOT NULL,
-  `empName` varchar(20) NOT NULL,
-  `empCNIC` bigint(15) NOT NULL,
-  `empContactNo.` bigint(15) UNSIGNED NOT NULL,
-  `empSex` varchar(7) NOT NULL,
-  `empSalary` int(11) NOT NULL,
-  `empBirthDate` date NOT NULL,
-  `empRole` varchar(9) NOT NULL,
-  `pharmacyID` int(11) DEFAULT '1'
+CREATE TABLE `employee` (
+  `empID` INT(11) NOT NULL AUTO_INCREMENT,
+  `UserName` VARCHAR(20) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `empName` VARCHAR(50) NOT NULL,
+  `empCNIC` BIGINT(15) NOT NULL,
+  `empContactNo` BIGINT(15) UNSIGNED NOT NULL,
+  `empSex` VARCHAR(7) NOT NULL,
+  `empSalary` DECIMAL(10,2) NOT NULL,
+  `empBirthDate` DATE NOT NULL,
+  `empRole` VARCHAR(20) NOT NULL,
+  `pharmacyID` INT(11) DEFAULT 1,
+  PRIMARY KEY (`empID`),
+  UNIQUE KEY `empContactNo` (`empContactNo`),
+  CONSTRAINT `employee_ibfk_1` FOREIGN KEY (`pharmacyID`) REFERENCES `pharmacy` (`pharmacyID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
--- Dumping data for table `emploee`
+-- Dumping data for table `employee`
 --
 
-INSERT INTO `emploee` (`empID`, `UserName`, `password`, `empName`, `empCNIC`, `empContactNo.`, `empSex`, `empSalary`, `empBirthDate`, `empRole`, `pharmacyID`) VALUES
-(1, 'abc', '123456', 'Asim', 25823, 2453256436, '1', 34353, '2019-05-01', 'Admin', 1);
+INSERT INTO `employee` (`UserName`, `password`, `empName`, `empCNIC`, `empContactNo`, `empSex`, `empSalary`, `empBirthDate`, `empRole`, `pharmacyID`) 
+VALUES ('abc', '$2y$10$qVQzDxpZyUJyWmZodGZoZOv8ZfKNj4zXQ4V4zh4zh4zh4zh4zh4zX', 'Asim', 25823, 2453256436, 'Male', 34353.00, '2019-05-01', 'Admin', 1);
 
 -- --------------------------------------------------------
 
@@ -81,17 +95,18 @@ INSERT INTO `emploee` (`empID`, `UserName`, `password`, `empName`, `empCNIC`, `e
 --
 
 CREATE TABLE `medcompany` (
-  `compID` int(11) NOT NULL,
-  `compName` varchar(20) NOT NULL,
-  `compContact` bigint(15) DEFAULT NULL
+  `compID` INT(11) NOT NULL AUTO_INCREMENT,
+  `compName` VARCHAR(50) NOT NULL,
+  `compContact` BIGINT(15) DEFAULT NULL,
+  PRIMARY KEY (`compID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `medcompany`
 --
 
-INSERT INTO `medcompany` (`compID`, `compName`, `compContact`) VALUES
-(1, 'hello', 3320443303);
+INSERT INTO `medcompany` (`compName`, `compContact`) 
+VALUES ('hello', 3320443303);
 
 -- --------------------------------------------------------
 
@@ -100,13 +115,15 @@ INSERT INTO `medcompany` (`compID`, `compName`, `compContact`) VALUES
 --
 
 CREATE TABLE `orders` (
-  `order_id` int(10) NOT NULL,
-  `InVoiceDate` date NOT NULL,
-  `order_type` varchar(7) NOT NULL,
-  `creditReturnDate` date DEFAULT NULL,
-  `order_total_amount` float NOT NULL,
-  `batch` varchar(10) DEFAULT NULL,
-  `supID` int(11) NOT NULL
+  `order_id` INT(10) NOT NULL AUTO_INCREMENT,
+  `InVoiceDate` DATE NOT NULL,
+  `order_type` VARCHAR(20) NOT NULL,
+  `creditReturnDate` DATE DEFAULT NULL,
+  `order_total_amount` DECIMAL(10,2) NOT NULL,
+  `batch` VARCHAR(20) DEFAULT NULL,
+  `supID` INT(11) NOT NULL,
+  PRIMARY KEY (`order_id`),
+  CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`supID`) REFERENCES `supplier` (`supplierID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -116,18 +133,19 @@ CREATE TABLE `orders` (
 --
 
 CREATE TABLE `pharmacy` (
-  `pharmacyID` int(11) NOT NULL,
-  `pharmacyName` varchar(20) NOT NULL,
-  `pharmaAddress` varchar(30) NOT NULL,
-  `pharmaContactNo` int(11) NOT NULL
+  `pharmacyID` INT(11) NOT NULL AUTO_INCREMENT,
+  `pharmacyName` VARCHAR(50) NOT NULL,
+  `pharmaAddress` VARCHAR(100) NOT NULL,
+  `pharmaContactNo` BIGINT(15) NOT NULL,
+  PRIMARY KEY (`pharmacyID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `pharmacy`
 --
 
-INSERT INTO `pharmacy` (`pharmacyID`, `pharmacyName`, `pharmaAddress`, `pharmaContactNo`) VALUES
-(1, 'Itthad Medical Store', 'cwec3rf3', 243234);
+INSERT INTO `pharmacy` (`pharmacyName`, `pharmaAddress`, `pharmaContactNo`) 
+VALUES ('Itthad Medical Store', 'cwec3rf3', 243234);
 
 -- --------------------------------------------------------
 
@@ -136,26 +154,29 @@ INSERT INTO `pharmacy` (`pharmacyID`, `pharmacyName`, `pharmaAddress`, `pharmaCo
 --
 
 CREATE TABLE `product` (
-  `productID` int(11) NOT NULL,
-  `productName` varchar(50) NOT NULL,
-  `productType` int(11) DEFAULT NULL,
-  `batch_id` varchar(10) DEFAULT NULL,
-  `productExpiryDate` varchar(12) DEFAULT NULL,
-  `quaintityPerPack` int(11) NOT NULL,
-  `Min_Level` int(6) UNSIGNED DEFAULT NULL,
-  `p_compID` int(11) NOT NULL,
-  `supplierID` int(11) NOT NULL,
-  `pBuyingPrice` float NOT NULL,
-  `pSellingPrice` float NOT NULL,
-  `pOldPrice` float DEFAULT NULL
+  `productID` INT(11) NOT NULL AUTO_INCREMENT,
+  `productName` VARCHAR(100) NOT NULL,
+  `productType` INT(11) DEFAULT NULL,
+  `batch_id` VARCHAR(20) DEFAULT NULL,
+  `productExpiryDate` DATE DEFAULT NULL,
+  `quantityPerPack` INT(11) NOT NULL,
+  `minLevel` INT(6) UNSIGNED DEFAULT NULL,
+  `compID` INT(11) NOT NULL,
+  `supplierID` INT(11) NOT NULL,
+  `buyingPrice` DECIMAL(10,2) NOT NULL,
+  `sellingPrice` DECIMAL(10,2) NOT NULL,
+  `oldPrice` DECIMAL(10,2) DEFAULT NULL,
+  PRIMARY KEY (`productID`),
+  CONSTRAINT `product_ibfk_1` FOREIGN KEY (`compID`) REFERENCES `medcompany` (`compID`),
+  CONSTRAINT `product_ibfk_2` FOREIGN KEY (`supplierID`) REFERENCES `supplier` (`supplierID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `product`
 --
 
-INSERT INTO `product` (`productID`, `productName`, `productType`, `batch_id`, `productExpiryDate`, `quaintityPerPack`, `Min_Level`, `p_compID`, `supplierID`, `pBuyingPrice`, `pSellingPrice`, `pOldPrice`) VALUES
-(1, 'panadol', NULL, 'e34', NULL, 12, 3, 1, 1, 10, 11.5, NULL);
+INSERT INTO `product` (`productName`, `productType`, `batch_id`, `productExpiryDate`, `quantityPerPack`, `minLevel`, `compID`, `supplierID`, `buyingPrice`, `sellingPrice`) 
+VALUES ('panadol', NULL, 'e34', NULL, 12, 3, 1, 1, 10.00, 11.50);
 
 -- --------------------------------------------------------
 
@@ -164,26 +185,28 @@ INSERT INTO `product` (`productID`, `productName`, `productType`, `batch_id`, `p
 --
 
 CREATE TABLE `purchaseinvoice` (
-  `id` int(11) NOT NULL,
-  `productNam` varchar(30) NOT NULL,
-  `BatchN` varchar(20) DEFAULT NULL,
-  `expiryD` date DEFAULT NULL,
-  `buying` float NOT NULL,
-  `retailP` float NOT NULL,
-  `totalQty` int(11) NOT NULL,
-  `minLev` int(11) DEFAULT NULL,
-  `nAmount` float NOT NULL,
-  `Margine` float NOT NULL
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `productName` VARCHAR(100) NOT NULL,
+  `batchNo` VARCHAR(20) DEFAULT NULL,
+  `expiryDate` DATE DEFAULT NULL,
+  `buyingPrice` DECIMAL(10,2) NOT NULL,
+  `retailPrice` DECIMAL(10,2) NOT NULL,
+  `totalQty` INT(11) NOT NULL,
+  `minLevel` INT(11) DEFAULT NULL,
+  `netAmount` DECIMAL(10,2) NOT NULL,
+  `margin` DECIMAL(5,2) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `purchaseinvoice`
 --
 
-INSERT INTO `purchaseinvoice` (`id`, `productNam`, `BatchN`, `expiryD`, `buying`, `retailP`, `totalQty`, `minLev`, `nAmount`, `Margine`) VALUES
-(1, 'panadol', '123e', '2019-05-16', 34, 38.08, 7, 6, 102, 12),
-(2, 'panerrtr', '3456', '2019-05-31', 3, 36.8, 7, 2, 96, 12.3),
-(3, 'wuefh', '42', '2019-06-05', 34.345, 52.5479, 38, 20, 1202.08, 53);
+INSERT INTO `purchaseinvoice` (`productName`, `batchNo`, `expiryDate`, `buyingPrice`, `retailPrice`, `totalQty`, `minLevel`, `netAmount`, `margin`) 
+VALUES
+('panadol', '123e', '2019-05-16', 34.00, 38.08, 7, 6, 102.00, 12.00),
+('panerrtr', '3456', '2019-05-31', 3.00, 36.80, 7, 2, 96.00, 12.30),
+('wuefh', '42', '2019-06-05', 34.35, 52.55, 38, 20, 1202.08, 53.00);
 
 -- --------------------------------------------------------
 
@@ -192,10 +215,11 @@ INSERT INTO `purchaseinvoice` (`id`, `productNam`, `BatchN`, `expiryD`, `buying`
 --
 
 CREATE TABLE `saleinvoice` (
-  `ID` bigint(20) NOT NULL,
-  `TotProducts` int(11) NOT NULL,
-  `Reference` varchar(20) NOT NULL,
-  `TotalPrice` int(11) NOT NULL
+  `ID` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `totalProducts` INT(11) NOT NULL,
+  `reference` VARCHAR(50) NOT NULL,
+  `totalPrice` DECIMAL(10,2) NOT NULL,
+  PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -205,20 +229,23 @@ CREATE TABLE `saleinvoice` (
 --
 
 CREATE TABLE `supplier` (
-  `supplierID` int(11) NOT NULL,
-  `supplierName` varchar(20) NOT NULL,
-  `supplierContactNo` bigint(15) NOT NULL,
-  `ExpiryDayPolicy` int(10) UNSIGNED NOT NULL,
-  `supplierComp` int(11) NOT NULL
+  `supplierID` INT(11) NOT NULL AUTO_INCREMENT,
+  `supplierName` VARCHAR(50) NOT NULL,
+  `supplierContactNo` BIGINT(15) NOT NULL,
+  `expiryDayPolicy` INT(10) UNSIGNED NOT NULL,
+  `supplierCompID` INT(11) NOT NULL,
+  PRIMARY KEY (`supplierID`),
+  CONSTRAINT `supplier_ibfk_1` FOREIGN KEY (`supplierCompID`) REFERENCES `suppliercompany` (`compID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `supplier`
 --
 
-INSERT INTO `supplier` (`supplierID`, `supplierName`, `supplierContactNo`, `ExpiryDayPolicy`, `supplierComp`) VALUES
-(1, 'ere', 24, 2, 1),
-(2, 'ffew', 535, 60, 1);
+INSERT INTO `supplier` (`supplierName`, `supplierContactNo`, `expiryDayPolicy`, `supplierCompID`) 
+VALUES
+('ere', 24, 2, 1),
+('ffew', 535, 60, 1);
 
 -- --------------------------------------------------------
 
@@ -227,164 +254,22 @@ INSERT INTO `supplier` (`supplierID`, `supplierName`, `supplierContactNo`, `Expi
 --
 
 CREATE TABLE `suppliercompany` (
-  `compID` int(11) NOT NULL,
-  `compName` varchar(20) NOT NULL,
-  `compContact` bigint(15) DEFAULT NULL,
-  `comAddress` varchar(50) DEFAULT NULL
+  `compID` INT(11) NOT NULL AUTO_INCREMENT,
+  `compName` VARCHAR(50) NOT NULL,
+  `compContact` BIGINT(15) DEFAULT NULL,
+  `compAddress` VARCHAR(100) DEFAULT NULL,
+  PRIMARY KEY (`compID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `suppliercompany`
 --
 
-INSERT INTO `suppliercompany` (`compID`, `compName`, `compContact`, `comAddress`) VALUES
-(1, 'gsk', 1434243, 'fshdtew34'),
-(2, 'echo', 253, 'fdffl;6');
+INSERT INTO `suppliercompany` (`compName`, `compContact`, `compAddress`) 
+VALUES
+('gsk', 1434243, 'fshdtew34'),
+('echo', 253, 'fdffl;6');
 
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `attendence`
---
-ALTER TABLE `attendence`
-  ADD KEY `emploeeID` (`emploeeID`);
-
---
--- Indexes for table `emploee`
---
-ALTER TABLE `emploee`
-  ADD PRIMARY KEY (`empID`),
-  ADD UNIQUE KEY `empContactNo.` (`empContactNo.`),
-  ADD KEY `pharmacyID` (`pharmacyID`);
-
---
--- Indexes for table `medcompany`
---
-ALTER TABLE `medcompany`
-  ADD PRIMARY KEY (`compID`);
-
---
--- Indexes for table `orders`
---
-ALTER TABLE `orders`
-  ADD PRIMARY KEY (`order_id`),
-  ADD KEY `supID` (`supID`);
-
---
--- Indexes for table `pharmacy`
---
-ALTER TABLE `pharmacy`
-  ADD PRIMARY KEY (`pharmacyID`);
-
---
--- Indexes for table `product`
---
-ALTER TABLE `product`
-  ADD PRIMARY KEY (`productID`),
-  ADD KEY `p_compID` (`p_compID`,`supplierID`),
-  ADD KEY `supplierID` (`supplierID`);
-
---
--- Indexes for table `purchaseinvoice`
---
-ALTER TABLE `purchaseinvoice`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `saleinvoice`
---
-ALTER TABLE `saleinvoice`
-  ADD PRIMARY KEY (`ID`);
-
---
--- Indexes for table `supplier`
---
-ALTER TABLE `supplier`
-  ADD PRIMARY KEY (`supplierID`),
-  ADD KEY `supplierComp` (`supplierComp`);
-
---
--- Indexes for table `suppliercompany`
---
-ALTER TABLE `suppliercompany`
-  ADD PRIMARY KEY (`compID`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `emploee`
---
-ALTER TABLE `emploee`
-  MODIFY `empID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `medcompany`
---
-ALTER TABLE `medcompany`
-  MODIFY `compID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `product`
---
-ALTER TABLE `product`
-  MODIFY `productID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `purchaseinvoice`
---
-ALTER TABLE `purchaseinvoice`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `saleinvoice`
---
-ALTER TABLE `saleinvoice`
-  MODIFY `ID` bigint(20) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `supplier`
---
-ALTER TABLE `supplier`
-  MODIFY `supplierID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `suppliercompany`
---
-ALTER TABLE `suppliercompany`
-  MODIFY `compID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `emploee`
---
-ALTER TABLE `emploee`
-  ADD CONSTRAINT `emploee_ibfk_1` FOREIGN KEY (`pharmacyID`) REFERENCES `pharmacy` (`pharmacyID`);
-
---
--- Constraints for table `orders`
---
-ALTER TABLE `orders`
-  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`supID`) REFERENCES `supplier` (`supplierID`);
-
---
--- Constraints for table `product`
---
-ALTER TABLE `product`
-  ADD CONSTRAINT `product_ibfk_1` FOREIGN KEY (`p_compID`) REFERENCES `medcompany` (`compID`),
-  ADD CONSTRAINT `product_ibfk_2` FOREIGN KEY (`supplierID`) REFERENCES `supplier` (`supplierID`);
-
---
--- Constraints for table `supplier`
---
-ALTER TABLE `supplier`
-  ADD CONSTRAINT `supplier_ibfk_1` FOREIGN KEY (`supplierComp`) REFERENCES `suppliercompany` (`compID`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
